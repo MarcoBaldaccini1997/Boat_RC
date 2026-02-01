@@ -8,7 +8,7 @@ RF24 radio(CE_RF, CSN_RF);
 const uint8_t address[5] = {'B','O','A','T','1'};
 
 #define DEBUG_EN
-#define SHOW_ONLY_TX_FAIL // comment this define if you want only see when the transmission fail
+//#define SHOW_ONLY_TX_FAIL // comment this define if you want only see when the transmission fail
 
 int main() {
 
@@ -43,7 +43,7 @@ int main() {
     #endif
 
     uint16_t data_sent = 0xABCD;
-    uint32_t data_received;
+    uint32_t data_received = 0x000000;
 
     uint32_t current_time = to_ms_since_boot (get_absolute_time ());
 
@@ -78,7 +78,7 @@ int main() {
 
       #ifdef DEBUG_EN 
         #ifndef SHOW_ONLY_TX_FAIL
-          printf("ACK: 0x%04X\n", data_received);
+          printf("ACK: 0x%06X\n", data_received);
         #endif
       #endif
       while ((to_ms_since_boot (get_absolute_time ()) - current_time) < TIME_UPDATE_TRANSMISSION); // wait until 100ms left
