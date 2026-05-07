@@ -2,6 +2,8 @@
 #include <stdint.h>
 #include <math.h>
 #include "pico/stdlib.h"
+#include "hardware/spi.h"
+#include "hardware/adc.h"
 #include "config.h"
 #include "generic_functions.h"
 #include "ILI9341_function.h"
@@ -10,16 +12,16 @@
 RF24 radio(CE_RF, CSN_RF);
 const uint8_t address[5] = {'B','O','A','T','1'};
 
-#define DEBUG_EN
-//#define SHOW_ONLY_TX_FAIL // comment this define if you want only see when the transmission fail
+//#define DEBUG_EN
+#define SHOW_ONLY_TX_FAIL // comment this define if you want only see when the transmission fail
 
 volatile int32_t encoderCount = 0;
 volatile int8_t encoderDirection = 0;
 volatile uint8_t lastEncoded = 0;
-volatile bool speed_direction = false;
+//volatile bool speed_direction = false;
 
 void encoder_isr(uint gpio, uint32_t events) {
-    if (speed_direction) return;
+    //if (speed_direction) return;
 
     uint8_t MSB = gpio_get(ENCODER_CLK_PIN);
     uint8_t LSB = gpio_get(ENCODER_DT_PIN);
@@ -58,6 +60,9 @@ int main() {
     #endif
     sleep_ms(2000);
 
+    adc_init ();  
+
+    adc_gpio_init (ANALOG_SPEED_PIN);
     gpio_init (F_B_SELECT_PIN);
     gpio_set_dir (F_B_SELECT_PIN, GPIO_IN);
     gpio_pull_up (F_B_SELECT_PIN);
@@ -89,6 +94,7 @@ int main() {
         true
     );
 
+    /**/
     if (!radio.begin()) { // if the RF module is not connected
       #ifdef DEBUG_EN
         printf("NRF24 not found\n");
@@ -110,11 +116,13 @@ int main() {
     radio.openWritingPipe(address);
     radio.stopListening();
 
+    /**/
+
     #ifdef DEBUG_EN
       printf("TX ready...\n");
     #endif
 
-    uint16_t data_sent = 0xABCD;
+    uint16_t data_sent = 0xABCD, prev_data_sent = 0x0000;
     uint32_t data_received = 0x000000;
 
     int32_t countSnapshot, last_value_encoder = 0;
@@ -143,14 +151,10 @@ int main() {
 
     /* ===== Start set initial value controller side ===== */
 
-    /*/
     // read the initial speed value
     previous_speed_level = 0;
     current_speed_level = read_speed_level ();
-    if (previous_speed_level != current_speed_level) {
-        previous_speed_level = current_speed_level;
-        draw_tachimeter_level (current_speed_level, previous_speed_level, speed_direction);
-    }/**/
+    draw_tachimeter_level (current_speed_level, previous_speed_level, speed_direction);
 
     // read the initial setpoint value
     previous_select_value [INDEX_F_B] = SELECT_LEFT;
@@ -187,27 +191,34 @@ int main() {
 
       // draw_setpoint = 0ms
       sleep_ms(2); // draw_tachimeter_level = 2 ms
+
+      current_speed_level = read_speed_level ();
+        if (previous_speed_level != current_speed_level) {
+            draw_tachimeter_level (current_speed_level, previous_speed_level, speed_direction);
+            previous_speed_level = current_speed_level;
+        }
       
       /* ===== Start read select value ===== */
-
-      current_select_value [INDEX_F_B] = gpio_get (F_B_SELECT_PIN);
-      current_select_value [INDEX_C_D] = gpio_get (C_D_SELECT_PIN);
-      current_select_value [INDEX_O_S] = gpio_get (O_S_SELECT_PIN);
-      if ((previous_select_value [INDEX_F_B] != current_select_value [INDEX_F_B]) && (current_speed_level == SPEED_0_INDEX)) {
-          uint8_t value_select_index = (current_select_value [INDEX_F_B] == 0) ? SELECT_LEFT : SELECT_RIGHT;
-          draw_select (SELECT_F_B, current_select_value [INDEX_F_B]);
-          previous_select_value [INDEX_F_B] = current_select_value [INDEX_F_B];
-      }
-      if ((previous_select_value [INDEX_C_D] != current_select_value [INDEX_C_D]) && (current_speed_level == SPEED_0_INDEX)) {
-          uint8_t value_select_index = (current_select_value [INDEX_C_D] == 0) ? SELECT_LEFT : SELECT_RIGHT;
-          draw_select (SELECT_C_D, value_select_index);
-          previous_select_value [INDEX_C_D] = current_select_value [INDEX_C_D];
-      }
-      if ((previous_select_value [INDEX_O_S] != current_select_value [INDEX_O_S]) && (current_speed_level == SPEED_0_INDEX)) {
-          uint8_t value_select_index = (current_select_value [INDEX_O_S] == 0) ? SELECT_LEFT : SELECT_RIGHT;
-          draw_select (SELECT_O_S, value_select_index);
-          previous_select_value [INDEX_O_S] = current_select_value [INDEX_O_S];
-      }
+      if (current_speed_level == SPEED_0_INDEX) {
+        current_select_value [INDEX_F_B] = gpio_get (F_B_SELECT_PIN);
+        current_select_value [INDEX_C_D] = gpio_get (C_D_SELECT_PIN);
+        current_select_value [INDEX_O_S] = gpio_get (O_S_SELECT_PIN);
+        if (previous_select_value [INDEX_F_B] != current_select_value [INDEX_F_B]) {
+            uint8_t value_select_index = (current_select_value [INDEX_F_B] == 0) ? SELECT_LEFT : SELECT_RIGHT;
+            draw_select (SELECT_F_B, current_select_value [INDEX_F_B]);
+            previous_select_value [INDEX_F_B] = current_select_value [INDEX_F_B];
+        }
+        if (previous_select_value [INDEX_C_D] != current_select_value [INDEX_C_D]) {
+            uint8_t value_select_index = (current_select_value [INDEX_C_D] == 0) ? SELECT_LEFT : SELECT_RIGHT;
+            draw_select (SELECT_C_D, value_select_index);
+            previous_select_value [INDEX_C_D] = current_select_value [INDEX_C_D];
+        }
+        if (previous_select_value [INDEX_O_S] != current_select_value [INDEX_O_S]) {
+            uint8_t value_select_index = (current_select_value [INDEX_O_S] == 0) ? SELECT_LEFT : SELECT_RIGHT;
+            draw_select (SELECT_O_S, value_select_index);
+            previous_select_value [INDEX_O_S] = current_select_value [INDEX_O_S];
+        }
+       }
 
       /* ===== End read select value ===== */
 
@@ -244,6 +255,18 @@ int main() {
             ((current_speed_level & SPEED_MASK) << SPEED_SHIFT) |
             (current_angle_setpoint & ANGLE_TO_DO_MASK);
 
+      if (prev_data_sent != data_sent) {
+        prev_data_sent = data_sent;
+        printf ("data_sent = 0x%04x\n", data_sent);
+        printf ("current_select_value [INDEX_F_B] = %d\n", current_select_value [INDEX_F_B]);
+        printf ("current_select_value [INDEX_C_D] = %d\n", current_select_value [INDEX_C_D]);
+        printf ("current_select_value [INDEX_O_S] = %d\n", current_select_value [INDEX_O_S]);
+        printf ("current_speed_level = 0x%d\n", current_speed_level);
+        printf ("current_angle_setpoint = 0x%d\n", current_angle_setpoint);
+        printf ("\n\n\n\n\n");
+      }
+      
+      /**/
       uint8_t success_sent = radio.write(&data_sent, sizeof(data_sent));
       if (success_sent) {
           if (radio.isAckPayloadAvailable()) {
@@ -271,61 +294,56 @@ int main() {
 
       #ifdef DEBUG_EN 
         #ifndef SHOW_ONLY_TX_FAIL
-            /*/
             if (previous_angle_boat != current_angle_boat) {
                 printf ("***\n");
                 printf("angle: %d\n", current_angle_boat);
                 printf ("***\n\n\n");
                 previous_angle_boat = current_angle_boat;
             }
-            /**/
-            /*/
             if (previous_battery_boat_level != current_battery_boat_level) {
                 printf ("***\n");
                 printf("batt: %d\n", current_battery_boat_level);
                 printf ("***\n\n\n");
                 previous_battery_boat_level = current_battery_boat_level;
             }
-            /**/
-            /*/
+
             if (previous_level_speed_motor_left [0] != current_level_speed_motor_left [0]) {
                 printf ("***\n");
                 printf("speed_l: %d\n", current_level_speed_motor_left [0]);
                 printf ("***\n\n\n");
                 previous_level_speed_motor_left [0] = current_level_speed_motor_left [0];
             }
-            /**/
-            /**/
+
             if (previous_level_speed_motor_left [1] != current_level_speed_motor_left [1]) {
                 printf ("***\n");
                 printf("dir_l: %d\n", current_level_speed_motor_left [1]);
                 printf ("***\n\n\n");
                 previous_level_speed_motor_left [1] = current_level_speed_motor_left [1];
             }
-            /**/
-            /*/
+
             if (previous_level_speed_motor_right [0] != current_level_speed_motor_right [0]) {
                 printf ("***\n");
                 printf("speed_r: %d\n", current_level_speed_motor_right [0]);
                 printf ("***\n\n\n");
                 previous_level_speed_motor_right [0] = current_level_speed_motor_right [0];
             }
-            /**/
-            /**/
+
             if (previous_level_speed_motor_right [1] != current_level_speed_motor_right [1]) {
                 printf ("***\n");
                 printf("speed_r: %d\n", current_level_speed_motor_right [1]);
                 printf ("***\n\n\n");
                 previous_level_speed_motor_right [1] = current_level_speed_motor_right [1];
             }
-            /**/
         #endif
       #endif
 
-      while ((to_ms_since_boot (get_absolute_time ()) - current_time) < TIME_UPDATE_TRANSMISSION); // wait until 100ms left
+      /**/
+      uint32_t time_to_sleep = to_ms_since_boot (get_absolute_time ()) - current_time;
+      if (time_to_sleep <= TIME_UPDATE_TRANSMISSION)
+            sleep_ms (time_to_sleep);
       current_time = to_ms_since_boot (get_absolute_time ());
 
-      /**/
+      
 
     }
 }

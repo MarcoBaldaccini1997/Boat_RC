@@ -164,7 +164,7 @@ extern "C" {
 /* ===== TIME UPDATE MACROS ===== */
 
 #define TIME_UPDATE_CONTROLLER_BATTERY  (60 * 1000) // 1 min in millisec
-#define TIME_UPDATE_TRANSMISSION        100 // 100 ms
+#define TIME_UPDATE_TRANSMISSION        1000 // 1000 ms
 #define TIME_CONTROLLER_BATTERY         60000 // 60000 ms = 60 s
 
 

@@ -9,7 +9,7 @@
 RF24 radio(CE_RF, CSN_RF);
 const uint8_t address[5] = {'B','O','A','T','1'};
 
-#define DEBUG_EN
+//#define DEBUG_EN
 
 
 
@@ -29,10 +29,10 @@ int main() {
     stdio_init_all();
   #endif
   sleep_ms(5000);
-  spi_init(SPI_PORT, FREQ_SPI);
-  gpio_set_function(SCK,  GPIO_FUNC_SPI);
-  gpio_set_function(MOSI, GPIO_FUNC_SPI);
-  gpio_set_function(MISO, GPIO_FUNC_SPI);
+  //spi_init(SPI_PORT, FREQ_SPI);
+  //gpio_set_function(SCK,  GPIO_FUNC_SPI);
+  //gpio_set_function(MOSI, GPIO_FUNC_SPI);
+  //gpio_set_function(MISO, GPIO_FUNC_SPI);
   
   gpio_init(IRQ_RF);
   gpio_set_dir(IRQ_RF, GPIO_IN);
@@ -58,7 +58,7 @@ int main() {
   
   radio.setChannel(CHANNEL_RF);
   radio.setDataRate(RF24_250KBPS); // for RF24_PA_MAX set RF24_250KBPS, not RF24_1MBPS
-  radio.setPALevel(RF24_PA_MAX); // RF24_PA_MIN, RF24_PA_LOW, RF24_PA_HIGH, RF24_PA_MAX
+  radio.setPALevel(RF24_PA_HIGH); // RF24_PA_MIN, RF24_PA_LOW, RF24_PA_HIGH, RF24_PA_MAX
 
   radio.enableAckPayload();
   radio.enableDynamicPayloads();
@@ -75,6 +75,7 @@ int main() {
   uint32_t data_sent = 0xABCDEF; // i want to send 24 bits
   uint16_t data_received = 0;
   uint32_t current_time = to_ms_since_boot (get_absolute_time ());
+  radio.writeAckPayload(1, &data_sent, sizeof(data_sent));
 
   for (;;) {
 
@@ -86,9 +87,9 @@ int main() {
       else sleep_ms (10);
     #endif
 
-    #ifndef DEBUG_EN
-      sleep_ms (10);
-    #endif
+    //#ifndef DEBUG_EN
+    //  sleep_ms (10);
+    //#endif
 
     if (nrf_irq) {
 
@@ -102,7 +103,7 @@ int main() {
               // ACK payload (4 byte)
               radio.writeAckPayload(1, &data_sent, sizeof(data_sent));
               data_sent = (data_sent == 0xABCDEF) ? 0x012345 : 0xABCDEF;
-              sleep_ms(TIME_WAIT_TO_SYNC);
+              //sleep_ms(TIME_WAIT_TO_SYNC);
           }
       }
   }

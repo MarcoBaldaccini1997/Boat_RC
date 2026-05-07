@@ -36,4 +36,12 @@ target_include_directories(test_timing_controller_boat PRIVATE
     ../library/RF24
 )
 
+target_compile_definitions(${CMAKE_PROJECT_NAME}
+    PUBLIC
+        PICO_DEFAULT_SPI=1
+        PICO_DEFAULT_SPI_SCK_PIN=10
+        PICO_DEFAULT_SPI_TX_PIN=15
+        PICO_DEFAULT_SPI_RX_PIN=12
+)
+
 pico_add_extra_outputs(test_timing_controller_boat)

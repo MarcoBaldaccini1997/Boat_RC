@@ -17,6 +17,7 @@ int main() {
     #endif
     sleep_ms(2000);
 
+
     if (!radio.begin()) { // if the RF module is not connected
       #ifdef DEBUG_EN
         printf("NRF24 not found\n");
@@ -81,9 +82,9 @@ int main() {
           printf("ACK: 0x%06X\n", data_received);
         #endif
       #endif
-      while ((to_ms_since_boot (get_absolute_time ()) - current_time) < TIME_UPDATE_TRANSMISSION); // wait until 100ms left
-      current_time = to_ms_since_boot (get_absolute_time ());
-
+      //while ((to_ms_since_boot (get_absolute_time ()) - current_time) < TIME_UPDATE_TRANSMISSION); // wait until 100ms left
+      //current_time = to_ms_since_boot (get_absolute_time ());
+      sleep_ms (TIME_UPDATE_TRANSMISSION);
     }
 }
 

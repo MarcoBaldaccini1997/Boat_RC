@@ -9,14 +9,14 @@ extern "C" {
 
 /* ===== PINS ===== */
 
-#define SPI_PORT   spi0
+#define SPI_PORT   spi1
 
-#define CSN_RF                          21
-#define CE_RF                           20
-#define IRQ_RF                          22
-#define MOSI                            19
-#define MISO                            16
-#define SCK                             18
+#define CSN_RF                          13
+#define CE_RF                           15
+#define IRQ_RF                          14
+#define MOSI                            11
+#define MISO                            12
+#define SCK                             10
 
 /* ===== GENERIC MACROS ===== */
 

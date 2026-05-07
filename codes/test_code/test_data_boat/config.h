@@ -9,20 +9,28 @@ extern "C" {
 
 /* ===== PINS ===== */
 
-#define SPI_PORT   spi0
+#define SPI_PORT_RF                     spi1
 
-#define CSN_RF                          21
-#define CE_RF                           20
-#define IRQ_RF                          22
-#define MOSI                            19
-#define MISO                            16
-#define SCK                             18
+#define CSN_RF                          13
+#define CE_RF                           15
+#define IRQ_RF                          14
+#define MOSI_RF                         11
+#define MISO_RF                         12
+#define SCK_RF                          10
+
+
+#define SPI_PORT_MPU                    spi0
+
+#define CSN_MPU                         13
+#define MOSI_MPU                        11
+#define MISO_MPU                        12
+#define SCK_MPU                         10
 
 /* ===== GENERIC MACROS ===== */
 
 #define CHANNEL_RF                      76 // this channel is far enough from the wifi band
 
-#define FREQ_SPI                        80 * 1000 * 1000
+#define FREQ_SPI_RF                        1 * 1000 * 1000
 
 /* ===== TIMING MACROS ===== */
 

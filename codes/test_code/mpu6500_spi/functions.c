@@ -26,6 +26,7 @@ void mpu6500_init() {
     uint8_t who = mpu6500_read (MPU_REG_WHO_AM_I);
     if (who != MPU_ID) {
         printf ("MPU6500 not found! WHO_AM_I=0x%02X\n", who);
+        for (;;);
     } else {
         printf ("MPU6500 detected!\n");
     }

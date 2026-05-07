@@ -9,8 +9,13 @@
 
 int main() {
     stdio_init_all ();
+    sleep_ms (2000);
+    printf ("ready");
 
-    spi_init (spi0, 1000 * 1000); // 1 MHz
+    spi_init (spi0, FREQ_SPI);
+
+    spi_set_format(spi0, 8, SPI_CPOL_1, SPI_CPHA_1, SPI_MSB_FIRST);
+
     gpio_set_function (PIN_MISO, GPIO_FUNC_SPI);
     gpio_set_function (PIN_SCK, GPIO_FUNC_SPI);
     gpio_set_function (PIN_MOSI, GPIO_FUNC_SPI);

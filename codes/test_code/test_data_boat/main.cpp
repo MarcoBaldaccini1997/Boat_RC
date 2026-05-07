@@ -9,7 +9,8 @@
 RF24 radio(CE_RF, CSN_RF);
 const uint8_t address[5] = {'B','O','A','T','1'};
 
-//#define DEBUG_EN
+#define DEBUG_EN
+//#define DISABLE_RF
 
 
 
@@ -29,10 +30,10 @@ int main() {
     stdio_init_all();
   #endif
   sleep_ms(5000);
-  spi_init(SPI_PORT, FREQ_SPI);
-  gpio_set_function(SCK,  GPIO_FUNC_SPI);
-  gpio_set_function(MOSI, GPIO_FUNC_SPI);
-  gpio_set_function(MISO, GPIO_FUNC_SPI);
+  spi_init(SPI_PORT_RF, FREQ_SPI_RF);
+  gpio_set_function(SCK_RF,  GPIO_FUNC_SPI);
+  gpio_set_function(MOSI_RF, GPIO_FUNC_SPI);
+  gpio_set_function(MISO_RF, GPIO_FUNC_SPI);
   
   gpio_init(IRQ_RF);
   gpio_set_dir(IRQ_RF, GPIO_IN);
@@ -55,7 +56,8 @@ int main() {
     printf("NRF24 found!\n");
   #endif
 
-  
+  for (;;);
+
   radio.setChannel(CHANNEL_RF);
   radio.setDataRate(RF24_250KBPS); // for RF24_PA_MAX set RF24_250KBPS, not RF24_1MBPS
   radio.setPALevel(RF24_PA_MAX); // RF24_PA_MIN, RF24_PA_LOW, RF24_PA_HIGH, RF24_PA_MAX
@@ -102,16 +104,16 @@ int main() {
         direction_motor = (data_received & DIRECTION_MASK) >> DIRECTION_SHIFT;
         common_diff = (data_received & COMMON_DIFF_MASK) >> COMMON_DIFF_SHIFT;
         open_loop_servo = (data_received & OPEN_LOOP_SERVO_MASK) >> OPEN_LOOP_SERVO_SHIFT;
-        #ifdef DEBUG_EN
-          printf("angle: %d ", angle_to_do);
-          printf("speed: %d ", speed_motor);
-          printf("dir: %d ", direction_motor);
-          printf("c/d: %d ", common_diff);
-          printf("ol/s: %d\n", open_loop_servo);
-        #endif
+        //#ifdef DEBUG_EN
+        //  printf("angle: %d ", angle_to_do);
+        //  printf("speed: %d ", speed_motor);
+        //  printf("dir: %d ", direction_motor);
+        //  printf("c/d: %d ", common_diff);
+        //  printf("ol/s: %d\n", open_loop_servo);
+        //#endif
         data_received = 0;
     }
-
+    /**/
     if ((to_ms_since_boot (get_absolute_time ()) - last_time_angle_read) >= TIME_UPDATE_ANGLE) {
       current_angle_boat = (current_angle_boat == 71) ? 0 : (current_angle_boat + 1);
       last_time_angle_read = to_ms_since_boot (get_absolute_time ());
@@ -129,7 +131,7 @@ int main() {
       motor_right_speed = (motor_right_speed == 7) ? 0 : (motor_right_speed + 1);
       last_time_motor_update = to_ms_since_boot (get_absolute_time ());
     }
-
+    /**/
     data_sent =
       DATA_VALID_RX |
       ((motor_left_direction & MOTOR_LEFT_DIR_MASK) << MOTOR_LEFT_DIR_SHIFT) |
