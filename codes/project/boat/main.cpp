@@ -68,7 +68,7 @@ int main() {
       #ifdef DEBUG_EN
         printf("NRF24 not found\n");
       #endif
-      while (1);
+      while (!radio.begin()) sleep_ms (1000);
     }
 
     #ifdef DEBUG_EN
